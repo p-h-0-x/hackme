@@ -1,0 +1,33 @@
+name: Restart EC2 on Issue creation
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  check_issue_and_restart:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Check issue and restart EC2 if required
+        run: |
+          title="${{ github.event.issue.title }}"
+          if [[ "$title" == "Server is down" ]]; then
+            echo "Restarting EC2 instance due to issue title..."
+            aws ec2 reboot-instances --instance-ids i-0123456789abcdef0
+
+            echo "Closing the issue..."
+            issue_number="${{ github.event.issue.number }}"
+            curl -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 https://api.github.com/repos/${{ github.repository }}/issues/$issue_number \
+                 -d '{"state": "closed"}'
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHPAT }}
