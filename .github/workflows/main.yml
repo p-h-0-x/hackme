@@ -3,6 +3,7 @@ name: Restart EC2 on Issue creation
 on:
   issues:
     types: [opened]
+  push:
 
 jobs:
   check_issue_and_restart:
