@@ -1,7 +1,7 @@
 name: Restart EC2 on Issue creation
 
 on:
-  issues:
+  pull_request:
     types: [opened]
 
 jobs:
@@ -17,6 +17,7 @@ jobs:
 
       - name: Check issue and restart EC2 if required
         run: |
+          cat 
           title="${{ github.event.issue.title }}"
           if [[ "$title" == "Server is down" ]]; then
             echo "Restarting EC2 instance due to issue title..."
